@@ -1,0 +1,4 @@
+{ "index": { "_index": "promocodes", "_id": "1" } }
+{ "id": "1", "name": "WINTER2024", "discount": "10", "dateFrom": "2023-12-01",  "dateTo": "2024-02-29" }
+{ "index": { "_index": "promocodes", "_id": "2" } }
+{ "id": "2", "name": "NEW24", "discount": "25", "dateFrom": "2024-02-01",  "dateTo": "2024-02-20" }
