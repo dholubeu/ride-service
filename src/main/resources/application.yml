@@ -10,3 +10,7 @@ spring:
     url: jdbc:postgresql://${POSTGRES_HOST}:5432/rides?currentSchema=rides_schema
     username: ${POSTGRES_USERNAME}
     password: ${POSTGRES_PASSWORD}
+
+elasticsearch:
+  host: ${ES_HOST}
+  promocode-index: promocodes
