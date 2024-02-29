@@ -4,10 +4,14 @@ import com.dholubeu.rideservice.domain.Coordinate;
 import com.dholubeu.rideservice.domain.Promocode;
 import com.dholubeu.rideservice.domain.Ride;
 import com.dholubeu.rideservice.domain.exception.ResourceDoesNotExistException;
+import com.dholubeu.rideservice.kafka.KfProducer;
+import com.dholubeu.rideservice.kafka.Message;
 import com.dholubeu.rideservice.repository.RideRepository;
 import com.dholubeu.rideservice.service.CoordinateService;
 import com.dholubeu.rideservice.service.PromocodeService;
 import com.dholubeu.rideservice.service.RideService;
+import com.dholubeu.rideservice.service.client.DriverClient;
+import com.dholubeu.rideservice.service.client.PassengerClient;
 import com.dholubeu.rideservice.service.property.DemandProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,18 +30,25 @@ public class RideServiceImpl implements RideService {
     private final RideRepository rideRepository;
     private final PromocodeService promocodeService;
     private final CoordinateService coordinateService;
+    private final DriverClient driverClient;
+    private final PassengerClient passengerClient;
+    private final KfProducer kfProducer;
 
     @Override
     public Ride create(Ride ride) {
+        Message message = new Message();
         ride.setDateTime(LocalDateTime.now());
         ride.setDemandValue(calculateDemandValue(ride)
                 .setScale(1, BigDecimal.ROUND_HALF_UP));
-        ride.setDestination(calculateDestination(ride)
-                .setScale(1, BigDecimal.ROUND_HALF_UP));
+                ride.setDestination(calculateDestination(ride, message)
+                        .setScale(1, BigDecimal.ROUND_HALF_UP));
         ride.setCost(calculateCost(ride)
                 .setScale(1, BigDecimal.ROUND_HALF_UP));
         ride.setStatus(Ride.Status.NEW);
-        return rideRepository.save(ride);
+        ride = rideRepository.save(ride);
+        message.setRideId(ride.getId());
+        kfProducer.send(message);
+        return ride;
     }
 
     @Override
@@ -76,12 +87,12 @@ public class RideServiceImpl implements RideService {
         Ride ride = findById(id);
         ride.setPassengerRating(passengerRating);
         List<Ride> rides = findAllByPassengerId(ride.getPassengerId());
-        //TODO call passenger-serivce to update rating
         BigDecimal averageRating = rides.stream()
                 .map(Ride::getPassengerRating)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .add(passengerRating)
                 .divide(BigDecimal.valueOf(rides.size() + 1), 2, BigDecimal.ROUND_HALF_UP);
+        passengerClient.updateRating(ride.getPassengerId(), averageRating);
         return rideRepository.save(ride);
     }
 
@@ -90,12 +101,12 @@ public class RideServiceImpl implements RideService {
         Ride ride = findById(id);
         ride.setDriverRating(driverRating);
         List<Ride> rides = findAllByPassengerId(ride.getDriverId());
-        //TODO call driver-serivce to update rating
         BigDecimal averageRating = rides.stream()
                 .map(Ride::getDriverRating)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .add(driverRating)
                 .divide(BigDecimal.valueOf(rides.size() + 1), 2, BigDecimal.ROUND_HALF_UP);
+        driverClient.updateRating(ride.getDriverId(), averageRating);
         return rideRepository.save(ride);
     }
 
@@ -112,8 +123,10 @@ public class RideServiceImpl implements RideService {
         return cost.multiply(ride.getDemandValue());
     }
 
-    private BigDecimal calculateDestination(Ride ride) {
+    private BigDecimal calculateDestination(Ride ride, Message message) {
         Coordinate coordinateFrom = coordinateService.getCoordinates(ride.getAddressFrom());
+        message.setLatitude(coordinateFrom.getLatitude());
+        message.setLongitude(coordinateFrom.getLongitude());
         Coordinate coordinateTo = coordinateService.getCoordinates(ride.getAddressTo());
         return coordinateService.calculateDistance(coordinateFrom.getLatitude(),
                 coordinateFrom.getLongitude(), coordinateTo.getLatitude(), coordinateTo.getLongitude());
