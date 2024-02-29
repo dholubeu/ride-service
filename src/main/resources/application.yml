@@ -2,6 +2,8 @@ server:
   port: 8012
 
 spring:
+  application:
+    name: rides
   liquibase:
     change-log: classpath:db.changelog/db.changelog-master.yml
   config:
@@ -14,3 +16,23 @@ spring:
 elasticsearch:
   host: ${ES_HOST}
   promocode-index: promocodes
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST}:8761/eureka
+
+open:
+  feign:
+    drivers:
+      host: ${FEIGN_DRIVERS_HOST}
+    passengers:
+      host: ${FEIGN_PASSENGERS_HOST}
+
+kafka:
+  topic: rides
+  partitions: 10
+  replicas: 1
+  port: ${KAFKA_HOST}:9092
+  key: ${KAFKA_KEY}
