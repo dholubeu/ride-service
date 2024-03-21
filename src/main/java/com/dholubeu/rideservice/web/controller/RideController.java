@@ -42,7 +42,7 @@ public class RideController {
         return promocodeMapper.toDto(promocode);
     }
 
-    @PostMapping()
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public RideDto create(@RequestBody @Validated RideDto rideDto) {
         Ride ride = rideMapper.toEntity(rideDto);
