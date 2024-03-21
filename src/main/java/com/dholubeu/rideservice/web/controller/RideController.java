@@ -72,7 +72,7 @@ public class RideController {
         return rideMapper.toDto(rides);
     }
 
-    @PutMapping("/statuses/{id}")
+    @PutMapping("/{id}/status")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public RideDto updateStatus(@PathVariable Long id, @RequestParam Ride.Status status) {
         Ride ride = rideService.updateStatus(id, status);
