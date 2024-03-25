@@ -1,1 +1,43 @@
+server:
+  port: 8012
+
+spring:
+  application:
+    name: rides
+  liquibase:
+    change-log: classpath:db.changelog/db.changelog-master.yml
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST}:5432/rides?currentSchema=rides_schema
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+
+elasticsearch:
+  host: ${ES_HOST}
+  promocode-index: promocodes
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_HOST}:8761/eureka
+
+
+app:
+  url: https://nominatim.openstreetmap.org/search?q=%s&format=json&polygon_kml=1&addressdetails=1
+
+open:
+  feign:
+    drivers:
+      host: ${FEIGN_DRIVERS_HOST}
+    passengers:
+      host: ${FEIGN_PASSENGERS_HOST}
+
+kafka:
+  topic: rides
+  partitions: 10
+  replicas: 1
+  port: ${KAFKA_HOST}:9092
+  key: ${KAFKA_KEY}
 
