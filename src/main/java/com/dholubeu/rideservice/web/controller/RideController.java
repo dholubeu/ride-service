@@ -38,7 +38,7 @@ public class RideController {
         return promocodeService.create(promocodeDto);
     }
 
-    @PostMapping()
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public RideDto create(@RequestBody @Validated RideDto rideDto) {
 
@@ -64,7 +64,7 @@ public class RideController {
         return rideService.findAllByDriverId(driverId);
     }
 
-    @PutMapping("/statuses/{id}")
+    @PutMapping("/{id}/status")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public RideDto updateStatus(@PathVariable Long id, @RequestParam Ride.Status status) {
         return rideService.updateStatus(id, status);
