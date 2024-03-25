@@ -13,6 +13,8 @@ import com.dholubeu.rideservice.service.RideService;
 import com.dholubeu.rideservice.service.client.DriverClient;
 import com.dholubeu.rideservice.service.client.PassengerClient;
 import com.dholubeu.rideservice.service.property.DemandProperties;
+import com.dholubeu.rideservice.web.dto.RideDto;
+import com.dholubeu.rideservice.web.mapper.RideMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,11 +23,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static com.dholubeu.rideservice.util.Constants.RIDE_DOES_NOT_EXIST_BY_ID_MESSAGE;
+import static com.dholubeu.rideservice.util.Constants.SCALE_VALUE;
+
 @Service
 @RequiredArgsConstructor
 public class RideServiceImpl implements RideService {
 
-    public static final String RESOURCE_DOES_NOT_EXIST_BY_ID_MESSAGE = "Ride with id %d does not exist";
 
     private final RideRepository rideRepository;
     private final PromocodeService promocodeService;
@@ -34,84 +38,96 @@ public class RideServiceImpl implements RideService {
     private final PassengerClient passengerClient;
     private final KfProducer kfProducer;
 
+    private final RideMapper rideMapper;
+
     @Override
-    public Ride create(Ride ride) {
+    public RideDto create(RideDto rideDto) {
         Message message = new Message();
+        Ride ride = rideMapper.toEntity(rideDto);
         ride.setDateTime(LocalDateTime.now());
         ride.setDemandValue(calculateDemandValue(ride)
-                .setScale(1, BigDecimal.ROUND_HALF_UP));
-                ride.setDestination(calculateDestination(ride, message)
-                        .setScale(1, BigDecimal.ROUND_HALF_UP));
+                .setScale(SCALE_VALUE, BigDecimal.ROUND_HALF_UP));
+        ride.setDestination(calculateDestination(ride, message)
+                .setScale(SCALE_VALUE, BigDecimal.ROUND_HALF_UP));
         ride.setCost(calculateCost(ride)
-                .setScale(1, BigDecimal.ROUND_HALF_UP));
+                .setScale(SCALE_VALUE, BigDecimal.ROUND_HALF_UP));
         ride.setStatus(Ride.Status.NEW);
         ride = rideRepository.save(ride);
         message.setRideId(ride.getId());
         kfProducer.send(message);
-        return ride;
+        return rideMapper.toDto(ride);
     }
 
     @Override
-    public Ride findById(Long id) {
-        return rideRepository.findById(id).orElseThrow(
+    public RideDto findById(Long id) {
+        var ride = rideRepository.findById(id).orElseThrow(
                 () -> new ResourceDoesNotExistException(
-                        String.format(RESOURCE_DOES_NOT_EXIST_BY_ID_MESSAGE, id)));
+                        String.format(RIDE_DOES_NOT_EXIST_BY_ID_MESSAGE, id)));
+        return rideMapper.toDto(ride);
     }
 
     @Override
-    public List<Ride> findAllByPassengerId(Long passengerId) {
-        return rideRepository.findAllByPassengerId(passengerId);
+    public List<RideDto> findAllByPassengerId(Long passengerId) {
+        var ride = rideRepository.findAllByPassengerId(passengerId);
+        return rideMapper.toDto(ride);
     }
 
     @Override
-    public List<Ride> findAllByDriverId(Long driverId) {
-        return rideRepository.findAllByDriverId(driverId);
+    public List<RideDto> findAllByDriverId(Long driverId) {
+
+        var ride = rideRepository.findAllByDriverId(driverId);
+        return rideMapper.toDto(ride);
     }
 
     @Override
-    public Ride updateStatus(Long id, Ride.Status status) {
-        Ride ride = findById(id);
+    public RideDto updateStatus(Long id, Ride.Status status) {
+        Ride ride = rideRepository.findById(id)
+                .orElseThrow(() -> new ResourceDoesNotExistException(""));
         ride.setStatus(status);
-        return rideRepository.save(ride);
+        rideRepository.save(ride);
+        return rideMapper.toDto(ride);
     }
 
     @Override
-    public Ride setDriverId(Long id, Long driverId) {
-        Ride ride = updateStatus(id, Ride.Status.ACCEPTED);
-        ride.setDriverId(driverId);
-        return rideRepository.save(ride);
+    public RideDto setDriverId(Long id, Long driverId) {
+        RideDto rideDto = updateStatus(id, Ride.Status.ACCEPTED);
+        rideDto.setDriverId(driverId);
+        return rideDto;
     }
 
     @Override
-    public Ride setPassengerRating(Long id, BigDecimal passengerRating) {
-        Ride ride = findById(id);
+    public RideDto setPassengerRating(Long id, BigDecimal passengerRating) {
+        Ride ride = rideRepository.findById(id)
+                .orElseThrow(() -> new ResourceDoesNotExistException(""));
         ride.setPassengerRating(passengerRating);
-        List<Ride> rides = findAllByPassengerId(ride.getPassengerId());
+        List<RideDto> rides = findAllByPassengerId(ride.getPassengerId());
         BigDecimal averageRating = rides.stream()
-                .map(Ride::getPassengerRating)
+                .map(RideDto::getPassengerRating)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .add(passengerRating)
                 .divide(BigDecimal.valueOf(rides.size() + 1), 2, BigDecimal.ROUND_HALF_UP);
         passengerClient.updateRating(ride.getPassengerId(), averageRating);
-        return rideRepository.save(ride);
+        return rideMapper.toDto(ride);
     }
 
     @Override
-    public Ride setDriverRating(Long id, BigDecimal driverRating) {
-        Ride ride = findById(id);
+    public RideDto setDriverRating(Long id, BigDecimal driverRating) {
+        Ride ride = rideRepository.findById(id)
+                .orElseThrow(() -> new ResourceDoesNotExistException(""));
         ride.setDriverRating(driverRating);
-        List<Ride> rides = findAllByPassengerId(ride.getDriverId());
+        List<RideDto> rides = findAllByPassengerId(ride.getDriverId());
         BigDecimal averageRating = rides.stream()
-                .map(Ride::getDriverRating)
+                .map(RideDto::getDriverRating)
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .add(driverRating)
                 .divide(BigDecimal.valueOf(rides.size() + 1), 2, BigDecimal.ROUND_HALF_UP);
         driverClient.updateRating(ride.getDriverId(), averageRating);
-        return rideRepository.save(ride);
+        rideRepository.save(ride);
+        return rideMapper.toDto(ride);
     }
 
     private BigDecimal calculateCost(Ride ride) {
-        BigDecimal cost =  ride.getDemandValue().multiply(ride.getDestination());
+        BigDecimal cost = ride.getDemandValue().multiply(ride.getDestination());
         if (ride.getPromocode() != null) {
             Optional<Promocode> promocode = promocodeService.findByName(ride.getPromocode());
             if (isPromocodeValid(ride, promocode)) {
@@ -151,7 +167,7 @@ public class RideServiceImpl implements RideService {
             return DemandProperties.LOW_DEMAND;
         } else if ((hour >= DemandProperties.HOURS_FOR_MEDIUM_DEMAND_FROM &&
                 hour < DemandProperties.HOURS_FOR_HIGH_DEMAND_FROM)) {
-            return  DemandProperties.MEDIUM_DEMAND;
+            return DemandProperties.MEDIUM_DEMAND;
         } else {
             return DemandProperties.HUGH_DEMAND;
         }

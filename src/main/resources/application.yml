@@ -23,6 +23,10 @@ eureka:
     service-url:
       defaultZone: http://${EUREKA_HOST}:8761/eureka
 
+
+app:
+  url: https://nominatim.openstreetmap.org/search?q=%s&format=json&polygon_kml=1&addressdetails=1
+
 open:
   feign:
     drivers:
@@ -36,3 +40,4 @@ kafka:
   replicas: 1
   port: ${KAFKA_HOST}:9092
   key: ${KAFKA_KEY}
+

@@ -3,6 +3,8 @@ package com.dholubeu.rideservice.service.impl;
 import com.dholubeu.rideservice.domain.Promocode;
 import com.dholubeu.rideservice.repository.PromocodeRepository;
 import com.dholubeu.rideservice.service.PromocodeService;
+import com.dholubeu.rideservice.web.dto.PromocodeDto;
+import com.dholubeu.rideservice.web.mapper.PromocodeMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,14 +15,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PromocodeServiceImpl implements PromocodeService {
 
-    public static final String RESOURCE_DOES_NOT_EXIST_BY_ID_MESSAGE = "Promocode with name %s does not exist";
-
     private final PromocodeRepository promocodeRepository;
+    private final PromocodeMapper promocodeMapper;
 
     @Override
-    public Promocode create(Promocode promocode) {
-        promocode.setId(UUID.randomUUID().toString());
-        return promocodeRepository.save(promocode);
+    public PromocodeDto create(PromocodeDto promocodeDto) {
+        Promocode promocode= promocodeMapper.toEntity(promocodeDto);
+        promocodeDto.setId(UUID.randomUUID().toString());
+         promocodeRepository.save(promocode);
+        return promocodeMapper.toDto(promocode);
+
     }
 
     @Override

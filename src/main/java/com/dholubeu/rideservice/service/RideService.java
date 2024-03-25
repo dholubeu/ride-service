@@ -1,26 +1,27 @@
 package com.dholubeu.rideservice.service;
 
 import com.dholubeu.rideservice.domain.Ride;
+import com.dholubeu.rideservice.web.dto.RideDto;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 public interface RideService {
 
-    Ride create(Ride ride);
+    RideDto create(RideDto rideDto);
 
-    Ride findById(Long id);
+    RideDto findById(Long id);
 
-    List<Ride> findAllByPassengerId(Long passengerId);
+    List<RideDto> findAllByPassengerId(Long passengerId);
 
-    List<Ride> findAllByDriverId(Long driverId);
+    List<RideDto> findAllByDriverId(Long driverId);
 
-    Ride updateStatus(Long id, Ride.Status status);
+    RideDto updateStatus(Long id, Ride.Status status);
 
-    Ride setDriverId(Long rideId, Long driverId);
+    RideDto setDriverId(Long rideId, Long driverId);
 
-    Ride setPassengerRating(Long id, BigDecimal passengerRating);
+    RideDto setPassengerRating(Long id, BigDecimal passengerRating);
 
-    Ride setDriverRating(Long id, BigDecimal driverRating);
+    RideDto setDriverRating(Long id, BigDecimal driverRating);
 
 }

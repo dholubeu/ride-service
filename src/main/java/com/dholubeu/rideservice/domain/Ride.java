@@ -67,10 +67,7 @@ public class Ride {
     @Column(name = "date_time")
     private LocalDateTime dateTime;
 
-    public enum PaymentMethod {
-        CARD,
-        CASH
-    }
+
 
     public enum Status {
         NEW,
