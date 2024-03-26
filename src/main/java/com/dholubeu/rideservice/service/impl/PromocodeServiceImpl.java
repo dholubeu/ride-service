@@ -20,8 +20,8 @@ public class PromocodeServiceImpl implements PromocodeService {
 
     @Override
     public PromocodeDto create(PromocodeDto promocodeDto) {
-        Promocode promocode= promocodeMapper.toEntity(promocodeDto);
-        promocodeDto.setId(UUID.randomUUID().toString());
+        Promocode promocode = promocodeMapper.toEntity(promocodeDto);
+        promocode.setId(UUID.randomUUID().toString());
          promocodeRepository.save(promocode);
         return promocodeMapper.toDto(promocode);
 
