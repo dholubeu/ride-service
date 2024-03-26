@@ -1,6 +1,6 @@
 package com.dholubeu.rideservice.service;
 
-import com.dholubeu.rideservice.domain.Ride;
+import com.dholubeu.rideservice.domain.Status;
 import com.dholubeu.rideservice.web.dto.RideDto;
 
 import java.math.BigDecimal;
@@ -16,7 +16,7 @@ public interface RideService {
 
     List<RideDto> findAllByDriverId(Long driverId);
 
-    RideDto updateStatus(Long id, Ride.Status status);
+    RideDto updateStatus(Long id, Status status);
 
     RideDto setDriverId(Long rideId, Long driverId);
 

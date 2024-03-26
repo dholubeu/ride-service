@@ -12,24 +12,24 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import static com.dholubeu.rideservice.util.Constants.DATE_FORMAT;
+import static com.dholubeu.rideservice.util.Constants.DATE_TIME_FORMAT;
+
 @Configuration
 public class DateFormatConfig {
 
-    private static final String dateTimeFormat = "yyyy/MM/dd HH:mm";
-    private static final String dateFormat = "yyyy-MM-dd";
-
     @Bean
     public Jackson2ObjectMapperBuilderCustomizer jsomCustomizer() {
-        return builder -> builder.simpleDateFormat(dateTimeFormat)
+        return builder -> builder.simpleDateFormat(DATE_TIME_FORMAT)
                 .serializerByType(LocalDateTime.class,
-                        new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(dateTimeFormat)))
+                        new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)))
                 .deserializerByType(LocalDateTime.class,
-                        new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(dateTimeFormat)))
-                .simpleDateFormat(dateFormat)
+                        new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT)))
+                .simpleDateFormat(DATE_FORMAT)
                 .serializerByType(LocalDate.class,
-                        new LocalDateSerializer(DateTimeFormatter.ofPattern(dateFormat)))
+                        new LocalDateSerializer(DateTimeFormatter.ofPattern(DATE_FORMAT)))
                 .deserializerByType(LocalDate.class,
-                        new LocalDateDeserializer(DateTimeFormatter.ofPattern(dateFormat)));
+                        new LocalDateDeserializer(DateTimeFormatter.ofPattern(DATE_FORMAT)));
     }
 
 }

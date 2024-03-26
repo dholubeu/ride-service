@@ -1,7 +1,7 @@
 package com.dholubeu.rideservice.web.controller;
 
 
-import com.dholubeu.rideservice.domain.Ride;
+import com.dholubeu.rideservice.domain.Status;
 import com.dholubeu.rideservice.service.PromocodeService;
 import com.dholubeu.rideservice.service.RideService;
 import com.dholubeu.rideservice.web.dto.PromocodeDto;
@@ -30,18 +30,15 @@ public class RideController {
     private final RideService rideService;
     private final PromocodeService promocodeService;
 
-
     @PostMapping("/promocodes")
     @ResponseStatus(HttpStatus.CREATED)
     public PromocodeDto createPromocode(@RequestBody @Validated PromocodeDto promocodeDto) {
-
         return promocodeService.create(promocodeDto);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public RideDto create(@RequestBody @Validated RideDto rideDto) {
-
         return rideService.create(rideDto);
     }
 
@@ -50,7 +47,6 @@ public class RideController {
     public RideDto findById(@PathVariable Long id) {
         return rideService.findById(id);
     }
-
 
     @GetMapping("passengers/{passengerId}")
     @ResponseStatus(HttpStatus.OK)
@@ -66,7 +62,7 @@ public class RideController {
 
     @PutMapping("/{id}/status")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public RideDto updateStatus(@PathVariable Long id, @RequestParam Ride.Status status) {
+    public RideDto updateStatus(@PathVariable Long id, @RequestParam Status status) {
         return rideService.updateStatus(id, status);
     }
 

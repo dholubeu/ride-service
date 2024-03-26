@@ -3,6 +3,7 @@ package com.dholubeu.rideservice.service.impl;
 import com.dholubeu.rideservice.domain.Coordinate;
 import com.dholubeu.rideservice.domain.Promocode;
 import com.dholubeu.rideservice.domain.Ride;
+import com.dholubeu.rideservice.domain.Status;
 import com.dholubeu.rideservice.domain.exception.ResourceDoesNotExistException;
 import com.dholubeu.rideservice.kafka.KfProducer;
 import com.dholubeu.rideservice.kafka.Message;
@@ -30,7 +31,6 @@ import static com.dholubeu.rideservice.util.Constants.SCALE_VALUE;
 @RequiredArgsConstructor
 public class RideServiceImpl implements RideService {
 
-
     private final RideRepository rideRepository;
     private final PromocodeService promocodeService;
     private final CoordinateService coordinateService;
@@ -51,8 +51,8 @@ public class RideServiceImpl implements RideService {
                 .setScale(SCALE_VALUE, BigDecimal.ROUND_HALF_UP));
         ride.setCost(calculateCost(ride)
                 .setScale(SCALE_VALUE, BigDecimal.ROUND_HALF_UP));
-        ride.setStatus(Ride.Status.NEW);
-        ride = rideRepository.save(ride);
+        ride.setStatus(Status.NEW);
+            ride = rideRepository.save(ride);
         message.setRideId(ride.getId());
         kfProducer.send(message);
         return rideMapper.toDto(ride);
@@ -60,7 +60,7 @@ public class RideServiceImpl implements RideService {
 
     @Override
     public RideDto findById(Long id) {
-        var ride = rideRepository.findById(id).orElseThrow(
+        Ride ride = rideRepository.findById(id).orElseThrow(
                 () -> new ResourceDoesNotExistException(
                         String.format(RIDE_DOES_NOT_EXIST_BY_ID_MESSAGE, id)));
         return rideMapper.toDto(ride);
@@ -68,21 +68,22 @@ public class RideServiceImpl implements RideService {
 
     @Override
     public List<RideDto> findAllByPassengerId(Long passengerId) {
-        var ride = rideRepository.findAllByPassengerId(passengerId);
+        List<Ride> ride = rideRepository.findAllByPassengerId(passengerId);
         return rideMapper.toDto(ride);
     }
 
     @Override
     public List<RideDto> findAllByDriverId(Long driverId) {
 
-        var ride = rideRepository.findAllByDriverId(driverId);
+        List<Ride> ride = rideRepository.findAllByDriverId(driverId);
         return rideMapper.toDto(ride);
     }
 
     @Override
-    public RideDto updateStatus(Long id, Ride.Status status) {
+    public RideDto updateStatus(Long id, Status status) {
         Ride ride = rideRepository.findById(id)
-                .orElseThrow(() -> new ResourceDoesNotExistException(""));
+                .orElseThrow(() -> new ResourceDoesNotExistException(
+                        String.format(RIDE_DOES_NOT_EXIST_BY_ID_MESSAGE, id)));
         ride.setStatus(status);
         rideRepository.save(ride);
         return rideMapper.toDto(ride);
@@ -90,7 +91,7 @@ public class RideServiceImpl implements RideService {
 
     @Override
     public RideDto setDriverId(Long id, Long driverId) {
-        RideDto rideDto = updateStatus(id, Ride.Status.ACCEPTED);
+        RideDto rideDto = updateStatus(id, Status.ACCEPTED);
         rideDto.setDriverId(driverId);
         return rideDto;
     }
@@ -98,7 +99,8 @@ public class RideServiceImpl implements RideService {
     @Override
     public RideDto setPassengerRating(Long id, BigDecimal passengerRating) {
         Ride ride = rideRepository.findById(id)
-                .orElseThrow(() -> new ResourceDoesNotExistException(""));
+                .orElseThrow(() -> new ResourceDoesNotExistException(
+                        String.format(RIDE_DOES_NOT_EXIST_BY_ID_MESSAGE, id)));
         ride.setPassengerRating(passengerRating);
         List<RideDto> rides = findAllByPassengerId(ride.getPassengerId());
         BigDecimal averageRating = rides.stream()

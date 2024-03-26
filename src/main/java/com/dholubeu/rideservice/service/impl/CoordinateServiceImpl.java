@@ -1,6 +1,5 @@
 package com.dholubeu.rideservice.service.impl;
 
-import co.elastic.clients.util.ContentType;
 import com.dholubeu.rideservice.domain.Coordinate;
 import com.dholubeu.rideservice.service.CoordinateService;
 import com.jayway.jsonpath.JsonPath;
@@ -16,11 +15,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.net.http.HttpHeaders;
 
 @Service
 @RequiredArgsConstructor
 public class CoordinateServiceImpl implements CoordinateService {
+
     @Value("${app.url}")
     public final String URL;
     public static final String SPACE_REGEXP = " ";
@@ -37,7 +36,7 @@ public class CoordinateServiceImpl implements CoordinateService {
         String finalUrl = String.format(URL, currentAddress);
         HttpResponse<JsonNode> response = Unirest
                 .get(finalUrl)
-                .header("Content-Type", ContentType.APPLICATION_JSON)
+                .header("Content-Type", "application/json")
                 .asJson();
         return extractCoordinatesFromResponse(response);
     }

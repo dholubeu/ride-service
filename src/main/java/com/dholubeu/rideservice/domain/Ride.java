@@ -67,14 +67,4 @@ public class Ride {
     @Column(name = "date_time")
     private LocalDateTime dateTime;
 
-
-
-    public enum Status {
-        NEW,
-        ACCEPTED,
-        IN_PROCESS,
-        FINISHED,
-        CLOSED
-    }
-
 }
